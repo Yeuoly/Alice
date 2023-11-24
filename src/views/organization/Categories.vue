@@ -1,6 +1,6 @@
 <template>
     <div class="b-v-categories">
-        <NResult style="margin: 30px;" title="选择组织" :description="isFirst ? '这是你第一次进入告示牌，你可以选择想加入的组织' : '选择您的筛选条件'">
+        <NResult style="margin: 30px;" title="选择组织" :description="isFirst ? '这是你第一次进入发布册，为了更好的发布与接收，你可以选择想加入的组织' : '选择您的筛选条件'">
             <template #icon>
                 <NIcon :component="BalloonOutline" size="64" color="green"></NIcon>
             </template>

@@ -1,6 +1,6 @@
 <template>
     <div class="b-c-click-captcha" :style="style">
-        <img class="img" :src="props.src" @click="handleClick" />
+        <img class="img" :src="props.src" @click="handleClick" ref="img" />
         <div class="prompt">
             请依次点击 {{ props.prompt.split('').join('，') }} 后继续操作
         </div>
@@ -17,6 +17,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+
+const img = ref<HTMLImageElement | null>(null)
 
 const props = defineProps({
     width: {
@@ -58,7 +60,12 @@ const emit = defineEmits<{
 
 const remove = (index: number) => {
     answer.value.splice(index, 1)
-    const value = answer.value.map(item => `${item.x},${item.y}`).join(',')
+    const rect = img.value?.getBoundingClientRect()
+    if (!rect) return
+
+    const { width, height } = rect
+
+    const value = answer.value.map(item => `${Math.round(item.x / width * 320)},${Math.round(item.y / height * 90)}`).join(',')
     emit('update', value)
 }
 
@@ -69,7 +76,15 @@ const handleClick = (e: MouseEvent) => {
         y: offsetY
     }
     answer.value.push(answerPoint)
-    const value = answer.value.map(item => `${item.x},${item.y}`).join(',')
+    // get img width and height from img element
+    const rect = img.value?.getBoundingClientRect()
+    if (!rect) return
+
+    const { width, height } = rect
+
+    // calculate the real position of the click point, image size is 320 * 90
+    console.log(answerPoint.y / height * 90)
+    const value = answer.value.map(item => `${Math.round(item.x / width * 320)},${Math.round(item.y / height * 90)}`).join(',')
     emit('update', value)
 }
 
@@ -83,11 +98,14 @@ watch(() => props.src, () => {
 .b-c-click-captcha {
     position: relative;
     border: #4b9e5f solid 1px;
+    border-radius: 8px;
 }
 
 .img {
     width: 100%;
-    height: calc(100% - 30px);
+    height: calc(100% - 25px);
+    border-radius: 8px;
+    object-fit: fill;
 }
 
 .prompt {
@@ -98,6 +116,9 @@ watch(() => props.src, () => {
     width: 100%;
     text-align: center;
     background-color: #4b9e5f;
+    line-height: 24px;
+    font-size: 12px;
+    border-radius: 0 0 8px 8px;
 }
 
 .answer {

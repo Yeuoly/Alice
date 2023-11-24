@@ -1,8 +1,8 @@
 <template>
     <div class="b-v-welcome">
-        <NResult style="padding-top: 50px;" size="medium" title="告示牌" description="">
+        <NResult style="padding-top: 50px;" size="medium" title="发布册" description="">
             <template #icon>
-                <NAvatar round :size="96" :src="getAssetsFile('logo.png')"></NAvatar>
+                <img width="192" height="192" :src="getAssetsFile('logo.png')" />
             </template>
         </NResult>
         <div style="position: absolute; bottom: 200px; width: 100%;">

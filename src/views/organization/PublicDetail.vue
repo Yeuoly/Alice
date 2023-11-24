@@ -311,7 +311,7 @@
                     <NGi :span="1"></NGi>
                     <NGi :span="2">
                         <div class="text-center">
-                            使用告示牌App扫码加入 <br> 二维码十分钟后失效
+                            使用发布册App扫码加入 <br> 二维码十分钟后失效
                         </div>
                         <NImage class="share-img" :src="inviteOrganizationNotificationsDataURL"></NImage>
                     </NGi>

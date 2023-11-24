@@ -3,11 +3,10 @@
         <div class="px5 pt3" v-if="notifications.length > 0">
             <NTimeline>
                 <NTimelineItem v-for="notification in notifications"
-                    :time="new Date(notification.start_at).toLocaleString()"
-                    :title="notification.notification?.title"
-                >
+                    :time="new Date(notification.start_at).toLocaleString()" :title="notification.notification?.title">
                     <template #icon>
-                        <NIcon v-if="notification.is_confirmed" :size="24" color="green" :component="CheckmarkCircleOutline"></NIcon>
+                        <NIcon v-if="notification.is_confirmed" :size="24" color="green"
+                            :component="CheckmarkCircleOutline"></NIcon>
                         <NIcon v-else :size="24" color="red" :component="CloseCircleOutline"></NIcon>
                     </template>
                     <template #default>
@@ -22,6 +21,37 @@
                             <div class="mt3">
                                 {{ notification.notification?.body }}
                             </div>
+                            <div class="mt5" v-if="notification.tasks.length > 0">
+                                <NGrid cols="1 s:1 m:2 l:2 xl:2 xl2:3" responsive="screen" x-gap="12">
+                                    <NGi v-for="task, k in notification.tasks">
+                                        <NCard :bordered="false" embedded size="small">
+                                            <div>
+                                                {{ k + 1 }} : {{ task.task.title }}
+                                            </div>
+                                            <div class="text-12 mt2">
+                                                {{ task.task.body }}
+                                            </div>
+                                            <div class="mt2">
+                                                <NButtonGroup>
+                                                    <NButton type="info" size="small" text v-if="!task.is_done"
+                                                        @click="completeTask(task)">
+                                                        <template #icon>
+                                                            <NIcon :component="Enter"></NIcon>
+                                                        </template>
+                                                        我已完成
+                                                    </NButton>
+                                                    <NButton type="success" size="small" text v-else>
+                                                        <template #icon>
+                                                            <NIcon :component="CheckmarkCircleOutline"></NIcon>
+                                                        </template>
+                                                        已完成
+                                                    </NButton>
+                                                </NButtonGroup>
+                                            </div>
+                                        </NCard>
+                                    </NGi>
+                                </NGrid>
+                            </div>
                             <template #footer>
                                 <NButtonGroup>
                                     <NButton type="primary" size="small" tertiary @click="toDetail(notification)">
@@ -30,7 +60,8 @@
                                         </template>
                                         进入
                                     </NButton>
-                                    <NButton type="info" size="small" tertiary v-if="!notification.is_confirmed" @click="confirmNotification(notification)">
+                                    <NButton type="info" size="small" tertiary v-if="!notification.is_confirmed"
+                                        @click="confirmNotification(notification)">
                                         <template #icon>
                                             <NIcon :component="CheckmarkCircleOutline"></NIcon>
                                         </template>
@@ -54,12 +85,12 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { notificationDatabase } from '../../store/notification'
-import { Organization, UserNotification } from '../../interface/typ'
+import { Organization, UserNotification, UserTask } from '../../interface/typ'
 import { useUserStore } from '../../store/user'
 import { useHeaderStore } from '../../store/header'
-import { NButton, NButtonGroup, NEmpty, NIcon, NProgress, NThing, NTimeline, NTimelineItem, useMessage } from 'naive-ui'
+import { NButton, NButtonGroup, NCard, NEmpty, NGi, NGrid, NIcon, NProgress, NThing, NTimeline, NTimelineItem, useMessage } from 'naive-ui'
 import { CheckmarkCircleOutline, CloseCircleOutline, Enter } from '@vicons/ionicons5'
-import { apiNotificationConfirm } from '../../interface/notification'
+import { apiNotificationConfirm, apiNotificationTaskComplete } from '../../interface/notification'
 
 const router = useRouter()
 const route = useRoute()
@@ -88,8 +119,6 @@ const loadOrganization = async () => {
         router.back()
     }
 
-    console.log(organization.value)
-
     headerStore.setTitle(organization?.value?.name || '通知')
 }
 
@@ -109,6 +138,43 @@ const confirmNotification = async (notification: UserNotification) => {
         notification.is_confirmed = 0
         await notificationDatabase.user_notifications.update(notification.id, {
             is_confirmed: false,
+        })
+    }
+}
+
+const completeTask = async (task: UserTask) => {
+    if (task.is_done) {
+        return
+    }
+    task.is_done = 1
+
+    await notificationDatabase.user_tasks.update(task.id, {
+        is_done: 1,
+    })
+
+    const response = await apiNotificationTaskComplete(task.id)
+    if (!response.isSuccess()) {
+        message.error(response.getError())
+        task.is_done = 0
+        await notificationDatabase.user_tasks.update(task.id, {
+            is_done: 0,
+        })
+    } else {
+        // update notification
+        const notification = notifications.value.find((notification) => notification.id == task.user_notification_id)
+        const tasks = notification?.tasks
+        if (!tasks) {
+            return
+        }
+        tasks.forEach((task) => {
+            if (task.id == task.id) {
+                task.is_done = 1
+            }
+        })
+        // convert proxy to object
+        const new_tasks = JSON.parse(JSON.stringify(tasks))
+        await notificationDatabase.user_notifications.update(task.user_notification_id, {
+            tasks: new_tasks,
         })
     }
 }

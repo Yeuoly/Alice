@@ -100,6 +100,14 @@
                         </NCard>
                     </NGi>
                 </NGrid>
+                <div class="mb5">
+                    <NButton v-if="loadLastLoaded != 0" type="primary" class="w100" text @click="handleScroll">
+                        <template #icon>
+                            <NIcon :component="Refresh"></NIcon>
+                        </template>
+                        加载更多
+                    </NButton>
+                </div>
             </div>
         </PullRefresh>
     </div>
@@ -130,7 +138,6 @@ import { FilterOptions } from '../component/Filter'
 // @ts-ignore
 import PullRefresh from 'pull-refresh-vue3'
 import { useRouter } from 'vue-router'
-import { useScroll, unuseScroll } from '../layout/event'
 import { onCheckedLogin } from '../middleware/auth/login'
 import { storeToRefs } from 'pinia'
 import { useUserStore } from '../store/user'
@@ -189,12 +196,6 @@ const handleScroll = () => {
     loadPage.value += 1
     loadLocalLatestNotifications()
 }
-onMounted(() => {
-    useScroll({ onBottom: handleScroll })
-})
-onBeforeUnmount(() => {
-    unuseScroll({ onBottom: handleScroll })
-})
 
 const refreshNotifications = async (force: boolean = false) => {
     loadPage.value = 0

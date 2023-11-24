@@ -25,9 +25,9 @@
                     <NAvatar :src="organization?.avatar" round></NAvatar>
                 </template>
                 <NTag :bordered="false" type="info" round>
-                    【{{ member?.role }}】{{ member?.name }}发布于 
-                {{ new Date(notification?.created_at || 0).toLocaleDateString() }}
-                </NTag> 
+                    【{{ member?.role }}】{{ member?.name }}发布于
+                    {{ new Date(notification?.created_at || 0).toLocaleDateString() }}
+                </NTag>
             </NPageHeader>
         </NCard>
         <NCard :bordered="false">
@@ -41,38 +41,18 @@
                             {{ notification?.body }}
                         </NBlockquote>
                     </div>
-                    <NGrid cols="3" class="text-center py5">
-                        <NGi>
-                            <NIcon :size="24" color="green" :component="EyeOutline"></NIcon> 
-                            <div>
-                                {{ profile?.views }}
-                            </div>
-                        </NGi>
-                        <NGi>
-                            <NIcon :size="24" color="green" :component="EnterOutline"></NIcon> 
-                            <div>
-                                {{ profile?.clicks }}
-                            </div>
-                        </NGi>
-                        <NGi>
-                            <NIcon :size="24" color="green" :component="HeartOutline"></NIcon> 
-                            <div>
-                                {{ profile?.likes }}
-                            </div>
-                        </NGi>
-                    </NGrid>
                     <NSpace justify="space-between">
                         <NTag round type="primary" class="mr1 mt2" :bordered="false">
                             <template #icon>
                                 <NIcon :component="Time"></NIcon>
                             </template>
-                            <NTime :time="new Date(notification?.end_at || 0)" :to="new Date()" type="relative"></NTime>
+                            发布于<NTime :time="new Date(notification?.end_at || 0)" :to="new Date()" type="relative"></NTime>
                         </NTag>
                         <NTag round type="info" class="mr1 mt2" :bordered="false">
                             <template #icon>
                                 <NIcon :component="List"></NIcon>
                             </template>
-                            事项：{{ tasks?.length }}
+                            事项数量：{{ tasks?.length }}
                         </NTag>
                     </NSpace>
                     <NDivider v-if="tasks?.length" title-placement="left">事项列表</NDivider>
@@ -84,10 +64,8 @@
                             <NBlockquote>
                                 {{ task.task.body }}
                             </NBlockquote>
-                            <NButton type="info" size="small" class="w100"
-                                v-if="task.is_done != 1"
-                                @click="completeTask(task)"
-                            >
+                            <NButton type="info" size="small" class="w100" v-if="task.is_done != 1"
+                                @click="completeTask(task)">
                                 <template #icon v-if="task?.is_done == 1">
                                     <NIcon :component="Checkmark"></NIcon>
                                 </template>
@@ -134,11 +112,8 @@
                     <NTime :time="new Date(notification?.created_at || 0)" :to="new Date()" type="relative"></NTime>
                 </template>
                 <template #action v-if="!user_notification?.is_read">
-                    <NButton type="primary" size="small"
-                        class="w100"
-                        :disabled="user_notification?.is_read == 1"
-                        @click="readNotification(user_notification)"
-                    >
+                    <NButton type="primary" size="small" class="w100" :disabled="user_notification?.is_read == 1"
+                        @click="readNotification(user_notification)">
                         <template #icon v-if="user_notification?.is_read">
                             <NIcon :component="Checkmark"></NIcon>
                         </template>
@@ -154,15 +129,15 @@
 import { ref, watch } from 'vue'
 import { notificationDatabase, useNotificationDetail } from '../../store/notification'
 import { useRoute, useRouter } from 'vue-router'
-import { 
+import {
     NAvatar, NBlockquote, NBreadcrumb, NBreadcrumbItem, NButton, NButtonGroup, NCard, NCollapse, NCollapseItem, NDivider,
-    NEllipsis, NGi, NGrid, NIcon, NList, NListItem, NPageHeader, NSpace, NTag, NThing, NTime, useMessage 
+    NEllipsis, NGi, NGrid, NIcon, NList, NListItem, NPageHeader, NSpace, NTag, NThing, NTime, useMessage
 } from 'naive-ui'
 import { getAssetsFile } from '../../utils'
 import { Cellular, CheckboxOutline, Checkmark, Close, EnterOutline, EyeOutline, HeartOutline, List, Time, Timer } from '@vicons/ionicons5'
-import { 
-    apiNotficationProfile, 
-    apiNotificationView, 
+import {
+    apiNotficationProfile,
+    apiNotificationView,
     apiNotificationRead,
     apiNotificationTaskComplete
 } from '../../interface/notification'
@@ -196,7 +171,7 @@ const readNotification = async (notification: UserNotification) => {
         await notificationDatabase.user_notifications.update(notification.id, {
             is_read: 0,
         })
-    } 
+    }
 }
 
 const completeTask = async (task: UserTask) => {
@@ -216,7 +191,7 @@ const completeTask = async (task: UserTask) => {
         await notificationDatabase.user_tasks.update(task.id, {
             is_done: 0,
         })
-    } 
+    }
 }
 
 const viewNotification = (nid: number) => {

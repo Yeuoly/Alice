@@ -40,7 +40,7 @@
             </NCard>
             <div>
                 <NGrid cols="1 s:2 m:2 l:3 xl:3 2xl:3" responsive="screen">
-                    <NGi v-for="task in tasks">
+                    <NGi v-for="task, k in tasks" :key="k">
                         <NCard size="small" class="clickable" :bordered="false" >
                             <NThing content-indented>
                                 <template #header>
@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 // TODO: virtual list, but not now, we need efficient
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
     notificationDatabase,
     syncNotification
@@ -102,17 +102,24 @@ import { FilterOptions } from '../component/Filter'
 // @ts-ignore
 import PullRefresh from 'pull-refresh-vue3'
 import { useRouter } from 'vue-router'
-import { useScroll, unuseScroll } from '../layout/event'
+import { useScroll } from '../layout/event'
 import { onCheckedLogin } from '../middleware/auth/login'
 import { useUserStore } from '../store/user'
 import { storeToRefs } from 'pinia'
 import { loadTask } from './Notification'
 
-const message = useMessage()
 const notification = useNotification()
 const router = useRouter()
 
 const tasks = ref<UserTask[]>([])
+
+const tasksMap = computed(() => {
+    const map = new Map<number, boolean>()
+    tasks.value.forEach((task) => {
+        map.set(task.id, true)
+    })
+    return map
+})
 
 const filter = ref<FilterOptions>()
 const handleFilterUpdate = (_filter: FilterOptions) => {
@@ -163,9 +170,23 @@ const handleScroll = () => {
 }
 onMounted(() => {
     useScroll({ onBottom: handleScroll })
-})
-onBeforeUnmount(() => {
-    unuseScroll({ onBottom: handleScroll })
+    notificationDatabase.user_tasks.hook('updating', function(mods, key, obj, trans) {
+        if (tasksMap.value.has(key)) {
+            const taskIndex = tasks.value.findIndex((task) => task.id == key)
+            if (taskIndex != -1) {
+                if (mods.hasOwnProperty('is_done')) {
+                    // @ts-ignore
+                    tasks.value[taskIndex].is_done = mods.is_done
+                }
+            }
+        }
+    })
+    notificationDatabase.user_tasks.hook('creating', function(key, obj) {
+        loadPage.value = 0
+        loadLastLoaded.value = 1
+        tasks.value = []
+        loadLocalLatestTasks()
+    })
 })
 
 const refreshNotifications = async (force: boolean = false) => {
